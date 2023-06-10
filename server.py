@@ -1,41 +1,23 @@
-import socketserver
+from abc import ABC
 import socket
-import threading
+import asyncio
+import multiprocessing
 
-class MyServer(socketserver.BaseRequestHandler):
-
-    def handle(self):
-        handle = True
-        while handle:
-            try:
-                print("waiting to receive...")
-                data = self.request.recv(1024).strip()
-                print("request receive")
-                if data == b'exit':
-                    exit()
-
-                print("{}  address client".format(self.client_address[0]))
-                self.send(data)
-            except Exception as ex:
-                print(f"Error: {ex}")
-    
-    def send(self, data):
-        self.request.sendall(data.upper())
-        
-    def close(self):
-        MyServer.close()
-
-
-class Main:
+class Connection(ABC):
 
     def __init__(self):
-        HOST = socket.gethostbyname(socket.gethostname())
-        
-        PORT = 5024
-        with socketserver.TCPServer((HOST,PORT), MyServer) as server:
-            print("run server...")
-            server.serve_forever()\
-           
+        self.host = socket.gethostbyname(socket.gethostname())
+        self.port = 5024
+        self.buffer = 1024
 
-if __name__ == '__main__':
-    Main()
+        # Create a datagram socket
+        self.server = socket.socket(family = socket.AF_INET, type = socket.SOCK_DGRAM)
+        # Bind to host and port
+        self.server.bind((self.host, self.port))
+        print("UDP server up and listening")
+
+    def encode(self, message):
+        return message.encode(encoding = 'UTF-8', errors = "strict")
+    
+    def decode(self, message):
+        return message.decode('UTF-8')
